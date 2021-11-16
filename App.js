@@ -3,7 +3,7 @@ import React, {useState, useEffect} from 'react';
 import {StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, Alert} from 'react-native';
 import {theme} from './colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Fontisto } from '@expo/vector-icons';
+import {Fontisto, AntDesign} from '@expo/vector-icons';
 
 const STORAGE_KEY = '@toDos';
 
@@ -12,17 +12,24 @@ export default function App() {
   const [working, setWorking] = useState(true);
   const [text, setText] = useState('');
   const [toDos, setToDos] = useState({});
+  const [complete, setComplete] = useState(false);
+  const [edit, setEdit] = useState(false);
+  const [newText, setNewText] = useState('');
 
   const travel = () => setWorking(false);
   const work = () => setWorking(true);
-  const onChangeText = (payload) => setText(payload);
+  const onChangeText = (payload) => {
+    setText(payload);
+    alert(payload);
+  }
   const addToDo = async () => {
     if (text === '') {
       return;
     }
-    const newToDos = {...toDos, [Date.now()]: {text, working}};
+    const newToDos = {...toDos, [Date.now()]: {text, working, complete, edit, newText}};
     setToDos(newToDos);
     await saveToDos(newToDos);
+    setNewText(text);
     setText('');
   };
   const saveToDos = async (toSave) => {
@@ -45,8 +52,24 @@ export default function App() {
       }
     ]);
     return;
-
   };
+  const completeToDos = (key) => {
+    const newToDos = {...toDos};
+    newToDos[key].complete = true;
+    setToDos(newToDos);
+    saveToDos(newToDos);
+  };
+
+  const editTodos = (key) => {
+    const newToDos = {...toDos};
+    if (newToDos[key].edit) newToDos[key].edit = false;
+    else newToDos[key].edit = true;
+    setToDos(newToDos);
+  };
+
+  const editText = (payload) => {
+    setNewText(payload)
+  }
 
   useEffect(() => {
     loadToDos();
@@ -75,10 +98,20 @@ export default function App() {
         {Object.keys(toDos).map((key) => (
           toDos[key].working === working ? (
             <View style={styles.toDo} key={key}>
-              <Text style={styles.toDoText}>{toDos[key].text}</Text>
-              <TouchableOpacity onPress={() => deleteToDos(key)}>
-                <Fontisto name="trash" size={18} color={theme.toDoBg} />
-              </TouchableOpacity>
+                {toDos[key].edit ? <TextInput style={styles.innerInput} value={newText} onChangeText={editText} ></TextInput> : <Text style={styles.toDoText}>{toDos[key].text}</Text>}
+              <View style={styles.btnGroup}>
+                <TouchableOpacity onPress={() => editTodos(key)}>
+                  <AntDesign name="edit" size={18} color="white" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => completeToDos(key)}>
+                  {toDos[key].complete ? <AntDesign style={styles.btn} name="checkcircle" size={18} color="white" /> :
+                    <AntDesign style={styles.btn} name="checkcircleo" size={18} color="white" />
+                  }
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => deleteToDos(key)}>
+                  <Fontisto name="trash" size={18} color={theme.toDoBg} />
+                </TouchableOpacity>
+              </View>
             </View>
           ) : null
         ))}
@@ -124,5 +157,16 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '500'
+  },
+  btnGroup: {
+    flexDirection: 'row'
+  },
+  btn: {
+    marginHorizontal: 15
+  },
+  innerInput : {
+    backgroundColor: 'white',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
   }
 });
