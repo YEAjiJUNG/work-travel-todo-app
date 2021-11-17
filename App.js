@@ -59,6 +59,10 @@ export default function App() {
 
   const editTodos = (key) => {
     const newToDos = {...toDos};
+    if(newToDos[key].complete){
+      alert('already complete');
+      return;
+    }
     if (newToDos[key].edit) newToDos[key].edit = false;
     else newToDos[key].edit = true;
     setToDos(newToDos);
@@ -175,7 +179,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row'
   },
   btn: {
-    marginHorizontal: 15
+    marginHorizontal: 20
   },
   innerInput: {
     backgroundColor: 'white',
