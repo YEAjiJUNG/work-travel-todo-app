@@ -78,8 +78,7 @@ export default function App() {
     if (text === '') {
       return;
     }
-    const newToDos = {...toDos};
-    newToDos[key].edit = false;
+    const newToDos = {...toDos, [key]: {text, working, complete, edit: false}};
     setToDos(newToDos);
     await saveToDos(newToDos);
   };
