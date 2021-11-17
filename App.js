@@ -14,22 +14,19 @@ export default function App() {
   const [toDos, setToDos] = useState({});
   const [complete, setComplete] = useState(false);
   const [edit, setEdit] = useState(false);
-  const [newText, setNewText] = useState('');
 
   const travel = () => setWorking(false);
   const work = () => setWorking(true);
   const onChangeText = (payload) => {
     setText(payload);
-    alert(payload);
-  }
+  };
   const addToDo = async () => {
     if (text === '') {
       return;
     }
-    const newToDos = {...toDos, [Date.now()]: {text, working, complete, edit, newText}};
+    const newToDos = {...toDos, [Date.now()]: {text, working, complete, edit}};
     setToDos(newToDos);
     await saveToDos(newToDos);
-    setNewText(text);
     setText('');
   };
   const saveToDos = async (toSave) => {
@@ -67,9 +64,21 @@ export default function App() {
     setToDos(newToDos);
   };
 
-  const editText = (payload) => {
-    setNewText(payload)
-  }
+  const editText = ({nativeEvent: {text}}, key) => {
+    const newToDos = {...toDos};
+    newToDos[key].text = text;
+    setToDos(newToDos);
+  };
+
+  const addNewText = async ({nativeEvent: {text}}, key) => {
+    if (text === '') {
+      return;
+    }
+    const newToDos = {...toDos};
+    newToDos[key].edit = false;
+    setToDos(newToDos);
+    await saveToDos(newToDos);
+  };
 
   useEffect(() => {
     loadToDos();
@@ -98,7 +107,11 @@ export default function App() {
         {Object.keys(toDos).map((key) => (
           toDos[key].working === working ? (
             <View style={styles.toDo} key={key}>
-                {toDos[key].edit ? <TextInput style={styles.innerInput} value={newText} onChangeText={editText} ></TextInput> : <Text style={styles.toDoText}>{toDos[key].text}</Text>}
+              {toDos[key].edit ? <TextInput style={styles.innerInput} value={toDos[key].text}
+                                            onChange={(e) => editText(e, key)}
+                                            onSubmitEditing={(e) => addNewText(e, key)}
+                                            returnKeyType="done"></TextInput> :
+                <Text style={styles.toDoText}>{toDos[key].text}</Text>}
               <View style={styles.btnGroup}>
                 <TouchableOpacity onPress={() => editTodos(key)}>
                   <AntDesign name="edit" size={18} color="white" />
@@ -164,9 +177,9 @@ const styles = StyleSheet.create({
   btn: {
     marginHorizontal: 15
   },
-  innerInput : {
+  innerInput: {
     backgroundColor: 'white',
     paddingVertical: 10,
-    paddingHorizontal: 10,
+    paddingHorizontal: 10
   }
 });
